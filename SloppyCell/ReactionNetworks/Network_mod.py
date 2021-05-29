@@ -1298,8 +1298,12 @@ class Network:
             local_namespace = var_vals
             local_namespace.update(self.namespace)
             # We strip whitespace, just for convenience
-            return eval(expr.strip(), local_namespace, {})
-
+            expr = expr.strip()
+            # print("expr", expr)
+            try: 
+                return eval(expr.strip(), local_namespace, {})
+            except Exception as e:
+                return float('inf')
     #
     # Methods to get and set object properties
     #
