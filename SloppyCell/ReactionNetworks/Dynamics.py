@@ -199,7 +199,12 @@ def integrate(net, times, rtol=None, atol=None, params=None, fill_traj=True,
     # reset.
     times = scipy.asarray(times)
     if times[0] == 0:
-        net.resetDynamicVariables()
+        try:
+            net.resetDynamicVariables()
+        except OverflowError:
+            logger.warn('OverflowError in initializing network %s on node %i.'
+            % (net.id, my_rank))
+            raise Utility.SloppyCellException
     net.compile()
 
     if (rtol is None or atol is None):
