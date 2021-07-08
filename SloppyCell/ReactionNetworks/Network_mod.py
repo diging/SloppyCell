@@ -12,6 +12,7 @@ import os
 import sys
 import shutil
 import operator
+import numpy
 
 import logging
 logger = logging.getLogger('ReactionNetworks.Network_mod')
@@ -1299,11 +1300,12 @@ class Network:
             local_namespace.update(self.namespace)
             # We strip whitespace, just for convenience
             expr = expr.strip()
-            # print("expr", expr)
+            print("exprinside", expr, local_namespace)
+            return eval(expr.strip(), local_namespace, {})
             try: 
                 return eval(expr.strip(), local_namespace, {})
             except Exception as e:
-                return float('inf')
+                return eval(np.exp(expr.strip()), local_namespace, {})
     #
     # Methods to get and set object properties
     #
