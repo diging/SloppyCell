@@ -68,7 +68,7 @@ class Network:
     # These are-predefined functions we want in our working namespace
     _common_namespace = {'log': scipy.log,
                          'log10': scipy.log10,
-                         'exp': np.exp,
+                         'exp': math.exp,
                          'cos': math.cos,
                          'sin': math.sin,
                          'tan': math.tan,
@@ -1284,7 +1284,6 @@ class Network:
         Evaluate the given expression using the current values of the network
         variables.
         """
-        print(expr)
         try:
             return float(expr)
         except ValueError:
@@ -1300,12 +1299,7 @@ class Network:
             local_namespace = var_vals
             local_namespace.update(self.namespace)
             # We strip whitespace, just for convenience
-            expr = expr.strip()
-            # print("exprinside", expr, local_namespace)
-            # try: 
             return eval(expr.strip(), local_namespace, {})
-            # except Exception as e:
-            #     return eval(np.exp(expr.strip()), local_namespace, {})
     #
     # Methods to get and set object properties
     #
