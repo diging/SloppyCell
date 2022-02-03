@@ -1,6 +1,5 @@
-from compiler.ast import *
+from ast import *
 import random
-import sets
 import unittest
 
 import SloppyCell.ExprManip as ExprManip
@@ -22,7 +21,7 @@ class test_Simplify(unittest.TestCase):
                  '(-2)**2', '-2**2', 'x/y == x/y', 'not True', 'x/x + y/y == 2',
                  '3 + 4 > 6', '3 + (4 > 6)',
                  ]
-
+        cases = ['2.0*exp(xIC)*1 + exp(xIC)*0']
         for expr in cases: 
             simplified = ExprManip.simplify_expr(expr)
             orig = eval(expr)

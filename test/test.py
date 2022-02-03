@@ -1,10 +1,11 @@
+from __future__ import print_function
 import glob
 import unittest
 import sys
 
 import SloppyCell
 import SloppyCell.Utility
-import SloppyCell.ReactionNetworks.Network_mod 
+from SloppyCell.ReactionNetworks  import Network_mod 
 
 def run_all_tests():
     all_tests = unittest.TestSuite()

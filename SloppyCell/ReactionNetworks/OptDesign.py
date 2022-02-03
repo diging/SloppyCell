@@ -29,7 +29,7 @@ def setup(paramfile,calcobject,senstrajfile,jtjfile) :
     NOTE: The derivatives computed for J^tJ need to be with respect
     to the *log* of the parameters
     """
-    import OptDesign as v
+    import SloppyCell.ReactionNetworks.OptDesign as v
     v.curp = load(paramfile)
     v.jtj = load(jtjfile)
     v.clc = calcobject 

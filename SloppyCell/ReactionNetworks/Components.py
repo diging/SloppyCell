@@ -1,7 +1,6 @@
 import logging
 logger = logging.getLogger('ReactionNetworks.Components')
 
-import sets
 
 import SloppyCell.ExprManip as ExprManip
 
@@ -119,18 +118,17 @@ class Event:
 
         self.trigger = trigger
 
-        if ExprManip.extract_vars(trigger) == sets.Set(['time']):
+        if ExprManip.extract_vars(trigger) == set(['time']):
             self.timeTriggered = True
             ast = ExprManip.AST.strip_parse(trigger)
             firstArg = ExprManip.AST.ast2str(ast.args[0])
             secondArg = ExprManip.AST.ast2str(ast.args[1])
-
             if firstArg == 'time':
                 self.triggeringTime = eval(secondArg)
             elif secondArg == 'time':
                 self.triggeringTime = eval(firstArg)
             else:
-                raise 'Problem in time triggered events'
+                raise NameError('Problem in time triggered events')
 
 class ConstraintEvent(Event):
     def __init__(self, id, trigger, message, name):

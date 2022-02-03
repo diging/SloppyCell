@@ -1,7 +1,6 @@
 import pickle
 import logging
 import smtplib
-
 import scipy
 
 from scipy import linspace, logspace
@@ -107,7 +106,7 @@ class ConstraintViolatedException(SloppyCellException):
         return ('Violated constraint: %s at time %g. Additional info: %s.'
                 %(self.constraint, self.time, self.message))
 
-from . import Redirector_mod
+import SloppyCell.Redirector_mod as Redirector_mod
 Redirector = Redirector_mod.Redirector
 
 def combine_hessians(hesses, key_sets):
@@ -125,8 +124,8 @@ def combine_hessians(hesses, key_sets):
     keys_seen = set(tot_keys)
     for ks in key_sets[1:]:
         new_keys = [key for key in ks if key not in keys_seen]
-        tot_keys.extend(new_keys)
-        keys_seen.union_update(set(new_keys))
+        tot_keys.extend_keylist(new_keys)
+        keys_seen|=set(new_keys)
 
     # Add all the appropriate hessian elements together
     key_to_index = dict(zip(tot_keys, range(len(tot_keys))))

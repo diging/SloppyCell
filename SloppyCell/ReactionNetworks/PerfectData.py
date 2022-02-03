@@ -7,16 +7,11 @@ import copy
 import logging
 logger = logging.getLogger('RxnNets.PerfectData')
 
-import sets
-
 import scipy
 import scipy.integrate
 
-import Dynamics
-
-from SloppyCell import HAVE_PYPAR, my_rank, my_host, num_procs
-if HAVE_PYPAR:
-    import pypar
+from SloppyCell.ReactionNetworks import Dynamics
+from SloppyCell import HAVE_MPI, my_rank, my_host, num_procs, comm
 
 def apply_func_to_traj(traj, func, only_nonderivs=False):
     """
@@ -24,7 +19,7 @@ def apply_func_to_traj(traj, func, only_nonderivs=False):
     trajectory
     """
     if only_nonderivs:
-        keys = [key for key in self.key_column.keys()
+        keys = [key for key in traj.key_column.keys()
                 if not isinstance(key, tuple)]
     else:
         keys = None
@@ -114,7 +109,7 @@ def discrete_data(net, params, pts, interval, vars=None, random=False,
             var_times[var] = scipy.linspace(interval[0], interval[1], pts)
 
     # Create a sorted list of the unique times in the var_times dict
-    int_times = sets.Set(scipy.ravel(var_times.values()))
+    int_times = set(scipy.ravel(var_times.values()))
     int_times.add(0)
     int_times = list(int_times)
     int_times.sort()
@@ -181,7 +176,7 @@ def hessian_log_params(sens_traj, data_ids=None, opt_ids=None,
         # reduce the amount we have to pickle
         # The only things the worker needs in the sens_traj are those that
         #  refer to data_ids it has to deal with.
-        vars_needed = sets.Set(sens_traj.optimizableVarKeys)
+        vars_needed = set(sens_traj.optimizableVarKeys)
         vars_needed.union_update(vars_assigned[worker])
         for var in vars_assigned[worker]:
             vars_needed.union_update([(var, ov) for ov in opt_ids])
@@ -194,14 +189,14 @@ def hessian_log_params(sens_traj, data_ids=None, opt_ids=None,
         args = {'sens_traj': worker_traj, 'data_ids': vars_assigned[worker], 
                 'data_sigmas': worker_ds, 'opt_ids': opt_ids,
                 'fixed_sf': fixed_sf}
-        pypar.send((command, args), worker)
+        comm.send((command, args), dest=worker)
 
     hess_dict = compute_sf_LMHessian_conts(sens_traj, vars_assigned[0],
                                            data_sigmas, opt_ids, fixed_sf)
 
     for worker in range(1, num_procs):
         logger.debug('Receiving from worker %i.' % worker)
-        hess_dict.update(pypar.receive(worker))
+        hess_dict.update(comm.recv(source=worker))
 
     hess = scipy.sum(hess_dict.values(), axis=0)
     if return_dict:

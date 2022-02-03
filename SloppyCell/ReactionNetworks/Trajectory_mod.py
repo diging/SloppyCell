@@ -6,13 +6,13 @@ logger = logging.getLogger('RxnNets.Trajectory_mod')
 import os
 import copy
 import types
-
+import numpy
 import scipy
 import scipy.interpolate
 
 import SloppyCell.KeyedList_mod
 KeyedList = SloppyCell.KeyedList_mod.KeyedList
-import Network_mod
+from SloppyCell.ReactionNetworks import Network_mod
 import SloppyCell.ExprManip as ExprManip
 
 class Trajectory:
@@ -47,7 +47,6 @@ class Trajectory:
                  empty=False, const_vals=None):
         if empty:
             return
-
         if key_column is not None:
             self.key_column = key_column
         else:
@@ -66,7 +65,7 @@ class Trajectory:
 
         # These are the main storage
         self.timepoints = scipy.zeros(0, scipy.float_)
-	self.values = scipy.zeros((0, len(self.key_column)), scipy.float_)
+        self.values = scipy.zeros((0, len(self.key_column)), scipy.float_)
 
         self.var_keys = net.variables.keys()
         self.dynamicVarKeys = net.dynamicVars.keys()
@@ -92,6 +91,7 @@ class Trajectory:
         # We make a copy of the Network's namespace.
         self._func_strs = copy.copy(net._func_strs)
         self.namespace = copy.copy(self._common_namespace)
+       
         for func_id, func_str in self._func_strs.items():
             self.namespace[func_id] = eval(func_str, self.namespace, {})
 
@@ -308,7 +308,6 @@ class Trajectory:
                 functionBody.append('%s = %s' % (lhs, rhs))
         else:
             functionBody.append('pass')
-
         return '\n\t'.join(functionBody) + '\n'
 
     def _make__sens_assignment(self, net):
@@ -320,27 +319,26 @@ class Trajectory:
                                 (id, id))
 
         if len(net.assignmentRules) > 0:
-	    for id, rule in net.assignmentRules.items():
+            for id, rule in net.assignmentRules.items():
                 #rule = net.substituteFunctionDefinitions(rule)
                 derivWRTdv = {}
                 for wrtId in net.dynamicVars.keys():
                     deriv = net.takeDerivative(rule, wrtId)
                     if deriv != '0':
                         derivWRTdv[wrtId] = deriv
+            for optId in net.optimizableVars.keys():
+                lhs = self._sub_var_names('%s__derivWRT__%s' % (id,optId))
+                rhs = []
+                # get derivative of assigned variable w.r.t.
+                #  dynamic variables
+                for wrtId, deriv in derivWRTdv.items():
+                    rhs.append('(%s) * %s__derivWRT__%s' %
+                                (deriv, wrtId, optId))
 
-		for optId in net.optimizableVars.keys():
-                    lhs = self._sub_var_names('%s__derivWRT__%s' % (id,optId))
-                    rhs = []
-                    # get derivative of assigned variable w.r.t.
-                    #  dynamic variables
-                    for wrtId, deriv in derivWRTdv.items():
-                        rhs.append('(%s) * %s__derivWRT__%s' %
-                                   (deriv, wrtId, optId))
-
-		    # now partial derivative w.r.t. optId
-		    derivWRTp = net.takeDerivative(rule, optId)
-		    if derivWRTp != '0':
-			rhs.append(derivWRTp)
+                # now partial derivative w.r.t. optId
+                derivWRTp = net.takeDerivative(rule, optId)
+                if derivWRTp != '0':
+                    rhs.append(derivWRTp)
 
                     if rhs:
                         rhs = ' + '.join(rhs)
@@ -366,10 +364,9 @@ class Trajectory:
         for ii, id in enumerate(self.dynamicVarKeys):
             self.values[-numAdded:, self.key_column.get(id)] =\
                     odeint_array[:, ii]
-
         self._assignment(self.values, self.timepoints, -numAdded, None)
         if holds_dt :
-            for ii, id in enumerate(self.dynamicVarKeys) :
+            for ii, id in enumerate(self.dynamicVarKeys):
                 self.values[-numAdded:, self.key_column.get((id,'time'))] = \
                     odeint_array[:,ii+len(self.dynamicVarKeys)]
 
@@ -463,21 +460,21 @@ class Trajectory:
 
     def _sub_var_names(self, input):
         mapping_dict = {}
-	for id in ExprManip.extract_vars(input):
-            # convert it back to something key_column will recognize
-	    # had to use a form  dynVarName__derivWRT__optParamName for the
-	    # sensitivity variable because otherwise,
-            # extract_vars gets confused
+        for id in ExprManip.extract_vars(input):
+                # convert it back to something key_column will recognize
+            # had to use a form  dynVarName__derivWRT__optParamName for the
+            # sensitivity variable because otherwise,
+                # extract_vars gets confused
             splitId = id.split('__derivWRT__')
             if len(splitId) == 1:
-	    	idname = splitId[0]
-	    elif len(splitId) == 2:
-	    	idname = tuple(splitId)
+                idname = splitId[0]
+            elif len(splitId) == 2:
+                idname = tuple(splitId)
             else:
                 raise 'Problem with id %s in Trajectory._sub_var_names' % id
 
-	    if idname in self.key_column.keys():
-                mapping = 'values[start:end, %i]' % self.key_column.get(idname)
+            if idname in self.key_column.keys():
+                    mapping = 'values[start:end, %i]' % self.key_column.get(idname)
             elif idname in self.const_var_values.keys():
                 # Don't substitute for constant variable names. Those will
                 #  be taken care of earlier in the method.
@@ -584,7 +581,7 @@ class Trajectory:
 
         if subinterval is not None : # confine things to just one interval
             if subinterval not in local_tcks.keys() :
-                raise "Not a valid subinterval (not in Trajectory.tcks.keys())"
+                raise NameError("Not a valid subinterval (not in Trajectory.tcks.keys())")
             else :
                 sorted_intervals = [[subinterval[0],subinterval[1]]]
                 interval_start_ind = 0

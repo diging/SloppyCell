@@ -209,7 +209,7 @@ def daeint(res, t, y0, yp0, rtol, atol, nrt = 0, rt = None, jac = None,
     """
 
     if scipy.isscalar(rpar):
-	raise ValueError('rpar must be a sequence.')
+        raise ValueError('rpar must be a sequence.')
 
     if rpar is None or len(rpar) == 0:
         # rpar needs to have at least length 1 or daskr will screw up arguments.
@@ -446,7 +446,7 @@ def daeint(res, t, y0, yp0, rtol, atol, nrt = 0, rt = None, jac = None,
                                           rpar, ipar,
                                           jac, psol, rt, nrt)
                 except (ValueError,OverflowError,TypeError,AttributeError,
-                    AssertionError,FloatingPointError,ZeroDivisionError), e:
+                    AssertionError,FloatingPointError,ZeroDivisionError) as e:
                     messages = redir.stop()
                     # report the error message
                     if messages is not None:

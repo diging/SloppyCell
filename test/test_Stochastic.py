@@ -62,7 +62,7 @@ class test_Events(unittest.TestCase):
                             params)
 
         total = res['x'][0.0]+res['y'][0.0]
-        resTimes = res['x'].keys()
+        resTimes = list(res['x'].keys())
         resTimes.sort()
         for t in resTimes:
             self.assertAlmostEqual(res['x'][t]+res['y'][t], total, 6,
@@ -118,8 +118,8 @@ class test_Events(unittest.TestCase):
             net.calculate({'x':times}, params)
         except RuntimeError:
             self.assertTrue("# Noncastable stoichiometry for x->0: '2*x'" in
-                            '%s'%sys.exc_value,
-                            'Raised an unknown RuntimeError: %s'%sys.exc_value)
+                            '%s'%sys.exc_info()[1],
+                            'Raised an unknown RuntimeError: %s'%sys.exc_info()[1])
             err = True
         self.assertTrue(err, 'Failed to raise error with unsupported reaction')
         
