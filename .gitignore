@@ -18,3 +18,4 @@ diff.pickle
 Example/Tyson_1991/*.png
 Example/Tyson_1991/*.tex
 test/algebraic_net*.xml
+*.DS_Store
